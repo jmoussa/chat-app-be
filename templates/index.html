@@ -13,9 +13,9 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     </head>
     <body>
-        <nav id="header" style="height: 7vh">
-            <div class="nav-wrapper" style="background: #4a85d9">
-                <div class="container" style="width:70%">
+        <nav id="header" style="height: 70px; overflow: hidden;">
+            <div class="nav-wrapper" style="background: #4a85d9; height: 100%;">
+                <div class="container" style="width:70%; height: 100%; ">
                     <a href='#' class="brand-logo">{{user_name}} in {{room_name}}</a>
                 </div> 
             </div>
@@ -158,20 +158,19 @@
             padding-bottom: 0.5rem;
             max-width: 100%;
             clear:both;
-            margin-top: 1vh;
+            margin-top: 1%;
             word-wrap: break-word;
         }
         #messages{
             position:fixed;
-            top: 50;
             padding: 0%;
-            margin-top: 7vh;
-            margin-bottom: 13vh;
+            margin-top: 70px;
             overflow:auto;
-            height: 80vh;
+            height: calc(100% - 200px);
             width: 80%;
             padding-left: 10%;
             padding-right: 10%;
+            border-right: 2px #4a85d9 solid;
         }
         i.right {
             margin: 0px;
@@ -190,11 +189,9 @@
             left: 0;
             width: 70%;
             display: block;
+            height: 90px;
             margin-right: 20%;
             margin-left: 10%;
-            margin-top: 1%;
-            padding-top: 1%;
-            border-top: 2px #4a85d9 solid;
         }
         #header {
             position: fixed;
@@ -207,7 +204,7 @@
         }
         /* hide scrollbar for edge/ie */
         body{
-            background: #e3e3e3;
+            background: #d1cdcd;
             -ms-overflow-style: none;
         }
         li .sender_tag_right {

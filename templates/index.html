@@ -13,19 +13,18 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     </head>
     <body>
-        <nav id="header">
+        <nav id="header" style="height: 7vh">
             <div class="nav-wrapper" style="background: #4a85d9">
-                <div class="container">
+                <div class="container" style="width:70%">
                     <a href='#' class="brand-logo">{{user_name}} in {{room_name}}</a>
-
-                </div>
+                </div> 
             </div>
         </nav>
-        <div class="container">
+        <div class="container" style="width:100%; padding: 0px; margin: 0px;">
             <ul id='messages'>
             </ul>
             <div class="row" id="footer">
-                <form name="chat-form" action="" onsubmit="sendMessage(event)" class="col s10">
+                <form name="chat-form" action="" onsubmit="sendMessage(event)" class="col s12">
                     <div class="row">
                         <div class="input-field col s12" style="display: inline-flex">
                             <input type="text" autocomplete="off" id="messageText" class="materialize-textarea" onclick="checkWebSocket(event)"></input>
@@ -89,21 +88,37 @@
             }
             ws.onmessage = function(event) {
                 var message = document.createElement('li');
-                console.log(JSON.parse(event.data))
-
-                var event_data = JSON.parse(event.data);
-                text = event_data.message
-                sender = event_data.sender
-                var content = document.createTextNode(text)
                 message.setAttribute('class', 'message');
-                if(sender == current_user){
-                    message.style.backgroundColor = '#ACEDFF'
+                
+                var event_data = JSON.parse(event.data);
+                var text_str = event_data.message
+                var text = document.createTextNode(text_str)
+                var sender_str = event_data.sender
+                var sender = document.createTextNode(sender_str);
+                
+                var content_tag = document.createElement('div');
+                content_tag.appendChild(text) 
+                content_tag.setAttribute("class", "content_tag") 
+                
+                var sender_tag = document.createElement('div')
+                sender_tag.appendChild(sender) 
+                sender_tag.setAttribute("class", "sender_tag") 
+                
+                if(sender_str == current_user){
+                    sender_tag.setAttribute("class", "sender_tag_right") 
+                    content_tag.style.backgroundColor = '#ACEDFF'
                     message.style.float = 'right' 
+                    content_tag.style.float = 'right' 
                 }else{
-                    message.style.backgroundColor = '#CAE5FF'
+                    sender_tag.setAttribute("class", "sender_tag_left") 
+                    content_tag.style.backgroundColor = '#CAE5FF'
                     message.style.float = 'left' 
+                    content_tag.style.float = 'left' 
                 }
-                message.appendChild(content)
+                
+                message.appendChild(content_tag)
+                message.appendChild(sender_tag)
+                
                 messages.appendChild(message)
                 messages.scrollTop = 999999999;
             };
@@ -123,27 +138,40 @@
         </script>
         <style>
         .message {
-            border-radius: 25px;
-            background: #06D6A0;
+            overflow:visible;
+            background: none;
             padding-right: 1.2rem;
             padding-left: 1.2rem;
             padding-top: 0.5rem;
             padding-bottom: 0.5rem;
             max-width: 50%;
             clear:both;
+            word-wrap: break-word;
+            position: relative;
+        }
+        .content_tag {
+            border-radius: 25px;
+            background: #06D6A0;
+            padding-right: 1.2rem;
+            padding-left: 1.2rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            max-width: 100%;
+            clear:both;
             margin-top: 1vh;
             word-wrap: break-word;
         }
         #messages{
             position:fixed;
-            top: 40;
+            top: 50;
             padding: 0%;
-            margin-top: 7.5vh;
-            overflow-y:auto;
-            overflow-x:hidden;
+            margin-top: 7vh;
+            margin-bottom: 13vh;
+            overflow:auto;
             height: 80vh;
-            width: 50vw;
-            margin-bottom: 12.5vh;
+            width: 80%;
+            padding-left: 10%;
+            padding-right: 10%;
         }
         i.right {
             margin: 0px;
@@ -159,8 +187,14 @@
         #footer {
             position: fixed;
             bottom: 0;
-            width: 70vw;
-            float: right;
+            left: 0;
+            width: 70%;
+            display: block;
+            margin-right: 20%;
+            margin-left: 10%;
+            margin-top: 1%;
+            padding-top: 1%;
+            border-top: 2px #4a85d9 solid;
         }
         #header {
             position: fixed;
@@ -173,9 +207,25 @@
         }
         /* hide scrollbar for edge/ie */
         body{
+            background: #e3e3e3;
             -ms-overflow-style: none;
         }
-
+        li .sender_tag_right {
+            display: none;
+        }
+        li .sender_tag_left{
+            display: none;
+        }
+        li:hover .sender_tag_right{
+            display: contents;
+            FONT-WEIGHT: 100;
+            FONT-SIZE: smaller;
+        }
+        li:hover .sender_tag_left{
+            display: contents;
+            FONT-WEIGHT: 100;
+            FONT-SIZE: smaller;
+        }
         </style>
     </body>
 </html>

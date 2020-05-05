@@ -14,8 +14,9 @@ I've set it up so that you only need to use the `run` script
 $ ./run
 ```
 
-Then go to localhost:8000/{room_name}/{user_name}
-room_name and user_name can be replaced by whatever you want (although you need to match room_names to actually chat with friends)
+Then go to `localhost:8000/{room_name}/{user_name}`
+
+The room_name and user_name can be replaced by whatever you want (although you need to match room_names to actually chat with friends)
 
 ## Explaination
 

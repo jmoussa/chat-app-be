@@ -105,8 +105,6 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
     try:
         while True:
             data = await websocket.receive_text()
-            # print(f"Sent: {data}")
-            # await websocket.send_text(f"{data}")
             await notifier.push(f"{data}", room_name)
     except WebSocketDisconnect:
         notifier.remove(websocket, room_name)

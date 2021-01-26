@@ -1,8 +1,7 @@
 import hashlib
 import uuid
-from models import User, UserInDB, Room, RoomInDB, Message, MessageInDB
+from models import UserInDB, RoomInDB
 
-# from bson import ObjectId
 from mongodb import get_nosql_db
 from config import MONGODB_DB_NAME
 

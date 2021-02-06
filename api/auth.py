@@ -2,9 +2,8 @@ import logging
 from datetime import timedelta
 
 from fastapi import Depends, APIRouter, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 
-from requests import RegisterRequest
+from requests import RegisterRequest, LoginRequest
 
 from controllers import (
     create_user,
@@ -22,9 +21,7 @@ router = APIRouter()
 
 
 @router.post("/token", tags=["Authentication"], response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncIOMotorClient = Depends(get_nosql_db)
-):
+async def login_for_access_token(form_data: LoginRequest, db: AsyncIOMotorClient = Depends(get_nosql_db)):
     """
     Login
     """

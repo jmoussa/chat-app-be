@@ -71,7 +71,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-@router.post("/token", response_model=Token)
+@router.post("/token", tags=["Authentication"], response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncIOMotorClient = Depends(get_nosql_db)
 ):
@@ -90,7 +90,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.put("/register")
+@router.put("/register", tags=["Authentication"])
 async def create_user_in_db(request: RegisterRequest, client: AsyncIOMotorClient = Depends(get_nosql_db)):
     db = client[MONGODB_DB_NAME]
     collection = db.rooms

@@ -31,6 +31,7 @@ class Room(BaseModel):
     members: Optional[List[UserInDB]] = []
     messages: Optional[List[MessageInDB]] = []
     last_pinged: datetime = Field(default_factory=datetime.utcnow)
+    active: bool = False
 
 
 class RoomInDB(Room):

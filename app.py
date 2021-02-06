@@ -62,7 +62,7 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
             data = await websocket.receive_text()
             await notifier.push(f"{data}", room_name)
     except WebSocketDisconnect:
-        notifier.remove(websocket, room_name)
+        await notifier.remove(websocket, room_name)
 
 
 app.include_router(api_router, prefix="/api")

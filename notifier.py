@@ -1,5 +1,6 @@
 from collections import defaultdict
 from fastapi import WebSocket
+from controllers import set_room_activity
 
 
 class Notifier:
@@ -21,13 +22,16 @@ class Notifier:
 
     async def connect(self, websocket: WebSocket, room_name: str):
         await websocket.accept()
+        await set_room_activity(room_name, True)
         if self.connections[room_name] == {} or len(self.connections[room_name]) == 0:
             self.connections[room_name] = []
         self.connections[room_name].append(websocket)
         print(f"CONNECTIONS : {self.connections[room_name]}")
 
-    def remove(self, websocket: WebSocket, room_name: str):
+    async def remove(self, websocket: WebSocket, room_name: str):
         self.connections[room_name].remove(websocket)
+        if len(self.connections[room_name]) == 0:
+            await set_room_activity(room_name, False)
 
     async def _notify(self, message: str, room_name: str):
         living_connections = []

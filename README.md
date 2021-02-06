@@ -1,3 +1,4 @@
+## Please note: the default `develop` branch does not house the full app, but the BE to another front-end. Use `master` branch for the full app where the local run instructions will work.
 # Chat Room App
 
 This app uses 

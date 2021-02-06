@@ -3,7 +3,8 @@ from datetime import timedelta
 
 from fastapi import Depends, APIRouter, HTTPException, status
 
-from requests import RegisterRequest, LoginRequest
+from requests import RegisterRequest
+from fastapi.security import OAuth2PasswordRequestForm
 
 from controllers import (
     create_user,
@@ -21,9 +22,11 @@ router = APIRouter()
 
 
 @router.post("/token", tags=["Authentication"], response_model=Token)
-async def login_for_access_token(form_data: LoginRequest, db: AsyncIOMotorClient = Depends(get_nosql_db)):
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncIOMotorClient = Depends(get_nosql_db)
+):
     """
-    Login
+    Login user and retrieve access token
     """
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -37,14 +40,17 @@ async def login_for_access_token(form_data: LoginRequest, db: AsyncIOMotorClient
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.put("/register", tags=["Authentication"])
+@router.put("/register", tags=["Authentication"], response_model=Token)
 async def create_user_in_db(request: RegisterRequest, client: AsyncIOMotorClient = Depends(get_nosql_db)):
+    """
+    Register user and retrieve access token
+    """
     db = client[MONGODB_DB_NAME]
     collection = db.users
     try:
         await create_user(request, collection)
     except Exception:
-        logger.error("REGISTER: User already in db, logging in")
+        logger.info("/REGISTER: User already in db, logging in")
         pass
 
     logger.info(f"{request.username}\n{request.password}")

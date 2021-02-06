@@ -36,3 +36,12 @@ class Room(BaseModel):
 class RoomInDB(Room):
     _id: ObjectId
     date_created: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None

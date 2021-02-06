@@ -1,15 +1,20 @@
 from fastapi import APIRouter, Depends
 from requests import RoomCreateRequest
 
-from controllers import insert_room, get_rooms, get_room
+from controllers import insert_room, get_rooms, get_room, get_current_active_user
 from mongodb import get_nosql_db, AsyncIOMotorClient
 from config import MONGODB_DB_NAME
+from models import User
 
 router = APIRouter()
 
 
 @router.put("/room", tags=["Rooms"])
-async def create_room(request: RoomCreateRequest, client: AsyncIOMotorClient = Depends(get_nosql_db)):
+async def create_room(
+    request: RoomCreateRequest,
+    client: AsyncIOMotorClient = Depends(get_nosql_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
     Create a room
     """
@@ -20,7 +25,9 @@ async def create_room(request: RoomCreateRequest, client: AsyncIOMotorClient = D
 
 
 @router.get("/rooms", tags=["Rooms"])
-async def get_all_rooms(client: AsyncIOMotorClient = Depends(get_nosql_db)):
+async def get_all_rooms(
+    client: AsyncIOMotorClient = Depends(get_nosql_db), current_user: User = Depends(get_current_active_user),
+):
     """
     Fetch all available rooms
     """
@@ -29,7 +36,9 @@ async def get_all_rooms(client: AsyncIOMotorClient = Depends(get_nosql_db)):
 
 
 @router.get("/room/{room_name}", tags=["Rooms"])
-async def get_single_room(room_name):
+async def get_single_room(
+    room_name, current_user: User = Depends(get_current_active_user),
+):
     """
     Get Room by room name
     """

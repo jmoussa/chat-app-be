@@ -1,20 +1,82 @@
-import hashlib
-import uuid
 from models import UserInDB, RoomInDB
+import bcrypt
 
+from datetime import datetime, timedelta
+from typing import Optional
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status
 from mongodb import get_nosql_db
+from models import TokenData
 from config import MONGODB_DB_NAME
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+import logging
+
+logger = logging.getLogger(__name__)
+pwd_context = CryptContext(schemes=["bcrypt"], default="bcrypt")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+def verify_password(plain_password_w_salt, hashed_password):
+    return pwd_context.verify(plain_password_w_salt, str(hashed_password), scheme="bcrypt")
+
+
+def get_password_hash(password_w_salt):
+    return pwd_context.hash(password_w_salt)
+
+
+async def authenticate_user(username: str, password: str):
+    user = await get_user(username)
+    if not user:
+        return False
+    if not verify_password(password + user.salt, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = get_user(token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
 
 
 async def create_user(request, collection):
-    salt = uuid.uuid4().hex
-    hashed_password = hashlib.sha512(request.password.encode("utf-8") + salt.encode("utf-8")).hexdigest()
+    salt = bcrypt.gensalt().decode()
+    hashed_password = get_password_hash(request.password + salt)
 
     user = {}
     user["username"] = request.username
     user["salt"] = salt
     user["hashed_password"] = hashed_password
-    # user = User(**user)
     dbuser = UserInDB(**user)
     response = await collection.insert_one(dbuser.dict())
     return {"id_inserted": str(response.inserted_id)}
@@ -29,11 +91,6 @@ async def get_user(name) -> UserInDB:
         return UserInDB(**row)
     else:
         return None
-
-
-def verify_password(plain_password_w_salt, hashed_password):
-    checked_password = hashlib.sha512(plain_password_w_salt.encode("utf-8")).hexdigest()
-    return checked_password == hashed_password
 
 
 async def insert_room(username, room_name, collection):

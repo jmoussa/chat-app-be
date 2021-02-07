@@ -9,6 +9,7 @@ class User(BaseModel):
     username: str
     hashed_password: str
     salt: str
+    disabled: Optional[bool] = False
 
 
 class UserInDB(User):

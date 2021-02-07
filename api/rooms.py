@@ -25,7 +25,9 @@ async def create_room(
 
 
 @router.get("/rooms", tags=["Rooms"])
-async def get_all_rooms(client: AsyncIOMotorClient = Depends(get_nosql_db)):
+async def get_all_rooms(
+    client: AsyncIOMotorClient = Depends(get_nosql_db), current_user: User = Depends(get_current_active_user)
+):
     """
     Fetch all available rooms
     """

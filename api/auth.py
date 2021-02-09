@@ -9,9 +9,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from controllers import (
     create_user,
     authenticate_user,
+    get_current_active_user,
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
+from models import User
 from mongodb import get_nosql_db, AsyncIOMotorClient
 from models import Token
 from config import MONGODB_DB_NAME
@@ -65,3 +67,11 @@ async def create_user_in_db(request: RegisterRequest, client: AsyncIOMotorClient
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/verify", tags=["Authentication"])
+async def get_user_from_token(current_user: User = Depends(get_current_active_user),):
+    """
+    Get user from token
+    """
+    return current_user

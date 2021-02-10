@@ -13,7 +13,7 @@ class User(BaseModel):
 
 
 class UserInDB(User):
-    _id: ObjectId 
+    _id: ObjectId
     date_created: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -43,6 +43,7 @@ class RoomInDB(Room):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
 
 class TokenData(BaseModel):
     username: Optional[str] = None

@@ -50,7 +50,7 @@ async def set_room_activity(room_name, activity_bool):
     if room is not None:
         _id = room["_id"]
         try:
-            result = db.replace_one({"_id": ObjectId(_id)}, {"activity": activity_bool})
+            result = db.update_one({"_id": ObjectId(_id)}, { "$set": {"active": activity_bool}})
             if result.modified_count < 1:
                 raise Exception("Room activity could not be updated")
         except Exception as e:

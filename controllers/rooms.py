@@ -25,7 +25,8 @@ async def get_rooms():
     rows = collection.find()
     row_list = []
     for row in rows:
-        row_list.append(RoomInDB(**row))
+        row["_id"] = str(row["_id"])
+        row_list.append(row)
     return row_list
 
 

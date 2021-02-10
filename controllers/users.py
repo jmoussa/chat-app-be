@@ -31,7 +31,7 @@ async def authenticate_user(username: str, password: str):
     user = await get_user(username)
     if not user:
         return False
-    if not verify_password(password + user.salt, user.hashed_password):
+    if not verify_password(password + user['salt'], user['hashed_password']):
         return False
     return user
 
@@ -64,7 +64,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     user = await get_user(token_data.username)
     if user is None:
         raise credentials_exception
-    return user
+    return User(**user)
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)):
@@ -82,16 +82,20 @@ async def create_user(request, collection):
     user["salt"] = salt
     user["hashed_password"] = hashed_password
     dbuser = UserInDB(**user)
-    response = await collection.insert_one(dbuser.dict())
-    return {"id_inserted": str(response.inserted_id)}
+    try:
+        response = collection.insert_one(dict(dbuser))
+        logger.warning(f"INSERT_ONE RESPONSE: {response}")
+        return {"id_inserted": str(response.inserted_id)}
+    except Exception as e:
+        raise Exception(f"{e}")
 
 
 async def get_user(name) -> UserInDB:
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
-    collection = db.users
-    row = await collection.find_one({"username": name})
+    users_collection = db.users
+    row = users_collection.find_one({"username": name})
     if row is not None:
-        return UserInDB(**row)
+        return row
     else:
         return None

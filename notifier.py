@@ -1,6 +1,9 @@
 from collections import defaultdict
 from fastapi import WebSocket
 from controllers import set_room_activity
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Notifier:
@@ -17,11 +20,12 @@ class Notifier:
             await self._notify(msg, room_name)
 
     async def push(self, msg: str, room_name: str = None):
-        message_body = {"message": msg, "room_name": room_name}
+        message_body = {"content": msg, "room_name": room_name}
         await self.generator.asend(message_body)
 
     async def connect(self, websocket: WebSocket, room_name: str):
         await websocket.accept()
+        logger.warning(room_name)
         await set_room_activity(room_name, True)
         if self.connections[room_name] == {} or len(self.connections[room_name]) == 0:
             self.connections[room_name] = []

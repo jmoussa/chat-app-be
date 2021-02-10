@@ -10,6 +10,7 @@ import pymongo
 import logging
 
 app = FastAPI()
+logger = logging.getLogger(__name__)
 
 origins = [
     "http://localhost.tiangolo.com",
@@ -20,7 +21,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # can alter with time
+    allow_origins='*',  # can alter with time
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,15 +35,27 @@ async def startup_event():
     db = client[MONGODB_DB_NAME]
     try:
         await notifier.generator.asend(None)
-        await db.create_collection("users")
-        await db.create_collection("rooms")
-        await db.create_collection("messages")
+        db.create_collection("users")
+    except pymongo.errors.CollectionInvalid as e:
+        logging.warning(e)
+        pass
+    try:
+        db.create_collection("rooms")
+    except pymongo.errors.CollectionInvalid as e:
+        logging.warning(e)
+        pass
+    try:
+        db.create_collection("messages")
+    except pymongo.errors.CollectionInvalid as e:
+        logging.warning(e)
+        pass
+    try:
         user_collection = db.users
         room_collection = db.rooms
-        await user_collection.create_index("username", name="username", unique=True)
-        await room_collection.create_index("room_name", name="room_name", unique=True)
+        user_collection.create_index("username", name="username", unique=True)
+        room_collection.create_index("room_name", name="room_name", unique=True)
     except pymongo.errors.CollectionInvalid as e:
-        logging.info(e)
+        logging.warning(e)
         pass
 
 
@@ -60,6 +73,7 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
     try:
         while True:
             data = await websocket.receive_text()
+            logger.warning(f"Recieved: {data}")
             await notifier.push(f"{data}", room_name)
     except WebSocketDisconnect:
         await notifier.remove(websocket, room_name)

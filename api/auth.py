@@ -14,7 +14,7 @@ from controllers import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from models import User
-from mongodb import get_nosql_db, AsyncIOMotorClient
+from mongodb import get_nosql_db, MongoClient
 from models import Token
 from config import MONGODB_DB_NAME
 
@@ -25,7 +25,7 @@ router = APIRouter()
 
 @router.post("/token", tags=["Authentication"], response_model=Token)
 async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncIOMotorClient = Depends(get_nosql_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: MongoClient = Depends(get_nosql_db)
 ):
     """
     Login user and retrieve access token
@@ -38,12 +38,12 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": user['username']}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.put("/register", tags=["Authentication"], response_model=Token)
-async def create_user_in_db(request: RegisterRequest, client: AsyncIOMotorClient = Depends(get_nosql_db)):
+async def create_user_in_db(request: RegisterRequest, client: MongoClient = Depends(get_nosql_db)):
     """
     Register user and retrieve access token
     """
@@ -51,11 +51,10 @@ async def create_user_in_db(request: RegisterRequest, client: AsyncIOMotorClient
     collection = db.users
     try:
         await create_user(request, collection)
-    except Exception:
-        logger.info("/REGISTER: User already in db, logging in")
+    except Exception as e:
+        logger.error(f"/register: {e}")
         pass
 
-    logger.info(f"{request.username}\n{request.password}")
     # now login and generate token
     user = await authenticate_user(request.username, request.password)
     if not user:
@@ -65,7 +64,7 @@ async def create_user_in_db(request: RegisterRequest, client: AsyncIOMotorClient
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": user['username']}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 

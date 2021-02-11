@@ -1,11 +1,12 @@
 from fastapi import FastAPI, WebSocket
+
 from starlette.websockets import WebSocketDisconnect
 
 from mongodb import close_mongo_connection, connect_to_mongo, get_nosql_db
 from starlette.middleware.cors import CORSMiddleware
 from config import MONGODB_DB_NAME
 from api import router as api_router
-from notifier import Notifier
+from notifier import ConnectionManager
 import pymongo
 import logging
 
@@ -21,7 +22,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins='*',  # can alter with time
+    allow_origins="*",  # can alter with time
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,7 +35,6 @@ async def startup_event():
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
     try:
-        await notifier.generator.asend(None)
         db.create_collection("users")
     except pymongo.errors.CollectionInvalid as e:
         logging.warning(e)
@@ -64,19 +64,21 @@ async def shutdown_event():
     await close_mongo_connection()
 
 
-notifier = Notifier()
+manager = ConnectionManager()
 
 
 @app.websocket("/ws/{room_name}/{user_name}")
 async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
-    await notifier.connect(websocket, room_name)
+    await manager.connect(websocket, room_name)
     try:
         while True:
             data = await websocket.receive_text()
-            logger.warning(f"Recieved: {data}")
-            await notifier.push(f"{data}", room_name)
+            # await manager.send_personal_message(f"{data}", websocket)
+            await manager.broadcast(f"{data}")
     except WebSocketDisconnect:
-        await notifier.remove(websocket, room_name)
+        await manager.disconnect(websocket, room_name)
+        data = {"content": f"{user_name} has left the chat", "user": {"username": user_name}, "room_name": room_name}
+        await manager.broadcast(f"{data}")
 
 
 app.include_router(api_router, prefix="/api")

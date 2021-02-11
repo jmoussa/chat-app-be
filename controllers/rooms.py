@@ -50,9 +50,8 @@ async def set_room_activity(room_name, activity_bool):
     if room is not None:
         _id = room["_id"]
         try:
-            result = db.update_one({"_id": ObjectId(_id)}, { "$set": {"active": activity_bool}})
-            if result.modified_count < 1:
-                raise Exception("Room activity could not be updated")
+            result = db.update_one({"_id": ObjectId(_id)}, {"$set": {"active": activity_bool}})
+            logger.info(f"Updated room activity {result}")
         except Exception as e:
             logger.error(f"ERROR SETTING ACTIVITY: {e}")
         new_doc = await get_room(room_name)

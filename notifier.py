@@ -1,48 +1,30 @@
-from collections import defaultdict
 from fastapi import WebSocket
 from controllers import set_room_activity
 import logging
+from typing import List
 
 logger = logging.getLogger(__name__)
 
 
-class Notifier:
+class ConnectionManager:
     def __init__(self):
-        self.connections: dict = defaultdict(dict)
-        self.generator = self.get_notification_generator()
-
-    async def get_notification_generator(self):
-        while True:
-            message = yield
-            print(f"MESSAGE : {message}")
-            msg = message["message"]
-            room_name = message["room_name"]
-            await self._notify(msg, room_name)
-
-    async def push(self, msg: str, room_name: str = None):
-        message_body = {"content": msg, "room_name": room_name}
-        await self.generator.asend(message_body)
+        self.active_connections: List[WebSocket] = []
 
     async def connect(self, websocket: WebSocket, room_name: str):
         await websocket.accept()
-        logger.warning(room_name)
         await set_room_activity(room_name, True)
-        if self.connections[room_name] == {} or len(self.connections[room_name]) == 0:
-            self.connections[room_name] = []
-        self.connections[room_name].append(websocket)
-        print(f"CONNECTIONS : {self.connections[room_name]}")
+        self.active_connections.append(websocket)
 
-    async def remove(self, websocket: WebSocket, room_name: str):
-        self.connections[room_name].remove(websocket)
-        if len(self.connections[room_name]) == 0:
+    async def disconnect(self, websocket: WebSocket, room_name: str):
+        self.active_connections.remove(websocket)
+        if len(self.active_connections) == 0:
             await set_room_activity(room_name, False)
 
-    async def _notify(self, message: str, room_name: str):
-        living_connections = []
-        while len(self.connections[room_name]) > 0:
-            # Looping like this is necessary in case a disconnection is handled
-            # during await websocket.send_text(message)
-            websocket = self.connections[room_name].pop()
-            await websocket.send_text(message)
-            living_connections.append(websocket)
-        self.connections[room_name] = living_connections
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        logger.debug(f"Broadcasting across {len(self.active_connections)} CONNECTIONS")
+        for connection in self.active_connections:
+            await connection.send_text(message)
+            logger.debug(f"Broadcasting: {message}")

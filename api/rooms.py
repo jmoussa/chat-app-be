@@ -9,7 +9,7 @@ from models import User
 router = APIRouter()
 
 
-@router.put("/room", tags=["Rooms"])
+@router.post("/room", tags=["Rooms"])
 async def create_room(
     request: RoomCreateRequest,
     client: MongoClient = Depends(get_nosql_db),
@@ -22,6 +22,17 @@ async def create_room(
     collection = db.rooms
     res = await insert_room(request.username, request.room_name, collection)
     return res
+
+
+@router.put("/room/{room_name}", tags=["Rooms"])
+async def add_user_to_room(
+    room_name: str, client: MongoClient = Depends(get_nosql_db), current_user: User = Depends(get_current_active_user),
+):
+    """
+    Add a user to the room's members
+    """
+    row = await add_user_to_room(current_user, room_name)
+    return row
 
 
 @router.get("/rooms", tags=["Rooms"])

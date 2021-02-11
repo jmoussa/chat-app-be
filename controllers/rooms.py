@@ -1,7 +1,7 @@
 from config import MONGODB_DB_NAME
 from controllers.users import get_user
 from mongodb import get_nosql_db
-from models import RoomInDB
+from models import RoomInDB, User
 import logging
 from bson import ObjectId
 
@@ -39,6 +39,20 @@ async def get_room(room_name) -> RoomInDB:
         row["_id"] = str(row["_id"])
         return row
     else:
+        return None
+
+
+async def add_user_to_room(user: User, room_name: str):
+    client = await get_nosql_db()
+    db = client[MONGODB_DB_NAME]
+    room = await get_room(room_name)
+    try:
+        collection = db.rooms
+        new_members = room["members"].append(user)
+        row = collection.update_one({"_id": ObjectId(room["_id"])}, {"$set": {"members": new_members}})
+        return row
+    except Exception as e:
+        logger.error(f"Error updating members: {e}")
         return None
 
 

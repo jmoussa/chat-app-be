@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket
 
 from starlette.websockets import WebSocketDisconnect
-
+from controllers import get_room, remove_user_from_room
 from mongodb import close_mongo_connection, connect_to_mongo, get_nosql_db
 from starlette.middleware.cors import CORSMiddleware
 from config import MONGODB_DB_NAME
@@ -18,11 +18,12 @@ origins = [
     "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:3000",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins="*",  # can alter with time
+    allow_origins=origins,  # can alter with time
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -76,8 +77,17 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
             # await manager.send_personal_message(f"{data}", websocket)
             await manager.broadcast(f"{data}")
     except WebSocketDisconnect:
+        logger.warning("Disconnecting Websocket")
         await manager.disconnect(websocket, room_name)
-        data = {"content": f"{user_name} has left the chat", "user": {"username": user_name}, "room_name": room_name}
+        await remove_user_from_room(None, room_name, username=user_name)
+        room = await get_room(room_name)
+        data = {
+            "content": f"{user_name} has left the chat",
+            "user": {"username": user_name},
+            "room_name": room_name,
+            "type": "dissmissal",
+            "new_room_obj": room,
+        }
         await manager.broadcast(f"{data}")
 
 

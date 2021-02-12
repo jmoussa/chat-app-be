@@ -31,7 +31,7 @@ async def authenticate_user(username: str, password: str):
     user = await get_user(username)
     if not user:
         return False
-    if not verify_password(password + user['salt'], user['hashed_password']):
+    if not verify_password(password + user["salt"], user["hashed_password"]):
         return False
     return user
 
@@ -84,7 +84,6 @@ async def create_user(request, collection):
     dbuser = UserInDB(**user)
     try:
         response = collection.insert_one(dict(dbuser))
-        logger.warning(f"INSERT_ONE RESPONSE: {response}")
         return {"id_inserted": str(response.inserted_id)}
     except Exception as e:
         raise Exception(f"{e}")

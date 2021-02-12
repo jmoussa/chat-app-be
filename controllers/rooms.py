@@ -44,18 +44,47 @@ async def get_room(room_name) -> RoomInDB:
         return None
 
 
-async def add_user_to_room(user: User, room_name: str):
+async def add_user_to_room(username: str, room_name: str):
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
-    room = await get_room(room_name)
     try:
+        room = await get_room(room_name)
+        user = await get_user(username)
+
         collection = db.rooms
-        new_members = room["members"].append(user)
-        row = collection.update_one({"_id": ObjectId(room["_id"])}, {"$set": {"members": new_members}})
-        return row
+        if user not in room["members"]:
+            logger.info(f"Adding {user['username']} to members")
+            collection.update_one({"_id": ObjectId(room["_id"])}, {"$push": {"members": user}})
+            return True
+        else:
+            logger.info(f"{user['username']} is already a member")
+            return True
     except Exception as e:
         logger.error(f"Error updating members: {e}")
         return None
+
+
+async def remove_user_from_room(user: User, room_name: str, username=None):
+    client = await get_nosql_db()
+    db = client[MONGODB_DB_NAME]
+    try:
+        room = await get_room(room_name)
+        if username is not None and user is None:
+            user = await get_user(username)
+
+        collection = db.rooms
+        if user in room["members"]:
+            logger.info(f"Removing {user['username']} from {room_name} members")
+            collection.update_one(
+                {"_id": ObjectId(room["_id"])}, {"$pull": {"members": {"username": user["username"]}}}
+            )
+            return True
+        else:
+            logger.info(f"{user['username']} is already out of the room")
+            return True
+    except Exception as e:
+        logger.error(f"Error updating members: {e}")
+        return False
 
 
 async def set_room_activity(room_name, activity_bool):

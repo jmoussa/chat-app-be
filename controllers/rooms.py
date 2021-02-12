@@ -15,7 +15,9 @@ async def insert_room(username, room_name, collection):
     room["members"] = [user] if user is not None else []
     dbroom = RoomInDB(**room)
     response = collection.insert_one(dbroom.dict())
-    return {"id_inserted": str(response.inserted_id)}
+    res = collection.find_one({"_id": response.inserted_id})
+    res["_id"] = str(res["_id"])
+    return res
 
 
 async def get_rooms():

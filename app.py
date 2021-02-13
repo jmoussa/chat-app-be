@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from websockets.exceptions import ConnectionClosedError
 from starlette.websockets import WebSocketDisconnect
-from controllers import get_room, remove_user_from_room, upload_message_to_room
+from controllers import get_room, remove_user_from_room, add_user_to_room, upload_message_to_room
 from mongodb import close_mongo_connection, connect_to_mongo, get_nosql_db
 from starlette.middleware.cors import CORSMiddleware
 from config import MONGODB_DB_NAME
@@ -73,6 +73,7 @@ manager = ConnectionManager()
 async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
     # add user
     await manager.connect(websocket, room_name)
+    await add_user_to_room(user_name, room_name)
     room = await get_room(room_name)
     data = {
         "content": f"{user_name} has entered the chat",
@@ -92,7 +93,6 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
     except (WebSocketDisconnect, ConnectionClosedError):
         # remove user
         logger.warning("Disconnecting Websocket")
-        await manager.disconnect(websocket, room_name)
         await remove_user_from_room(None, room_name, username=user_name)
         room = await get_room(room_name)
         data = {
@@ -103,6 +103,7 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
             "new_room_obj": room,
         }
         await manager.broadcast(f"{json.dumps(data, default=str)}")
+        await manager.disconnect(websocket, room_name)
 
 
 app.include_router(api_router, prefix="/api")

@@ -3,9 +3,27 @@ from controllers.users import get_user
 from mongodb import get_nosql_db
 from models import RoomInDB, User
 import logging
+import json
 from bson import ObjectId
 
 logger = logging.getLogger(__name__)
+
+
+async def upload_message_to_room(data):
+    message_data = json.loads(data)
+    client = await get_nosql_db()
+    db = client[MONGODB_DB_NAME]
+    try:
+        room = await get_room(message_data["room_name"])
+        user = await get_user(message_data["user"]["username"])
+        message_data["user"] = user
+        message_data.pop("room_name", None)
+        collection = db.rooms
+        collection.update_one({"_id": ObjectId(room["_id"])}, {"$push": {"messages": message_data}})
+        return True
+    except Exception as e:
+        logger.error(f"Error adding message to DB: {type(e)} {e}")
+        return False
 
 
 async def insert_room(username, room_name, collection):

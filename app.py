@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket
-
+from websockets.exceptions import ConnectionClosedError
 from starlette.websockets import WebSocketDisconnect
-from controllers import get_room, remove_user_from_room
+from controllers import get_room, remove_user_from_room, upload_message_to_room
 from mongodb import close_mongo_connection, connect_to_mongo, get_nosql_db
 from starlette.middleware.cors import CORSMiddleware
 from config import MONGODB_DB_NAME
@@ -75,8 +75,9 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
         while True:
             data = await websocket.receive_text()
             # await manager.send_personal_message(f"{data}", websocket)
+            await upload_message_to_room(data)
             await manager.broadcast(f"{data}")
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, ConnectionClosedError):
         logger.warning("Disconnecting Websocket")
         await manager.disconnect(websocket, room_name)
         await remove_user_from_room(None, room_name, username=user_name)

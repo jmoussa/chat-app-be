@@ -9,6 +9,7 @@ from api import router as api_router
 from notifier import ConnectionManager
 import pymongo
 import logging
+import json
 
 app = FastAPI()
 logger = logging.getLogger(__name__)
@@ -70,14 +71,26 @@ manager = ConnectionManager()
 
 @app.websocket("/ws/{room_name}/{user_name}")
 async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
+    # add user
     await manager.connect(websocket, room_name)
+    room = await get_room(room_name)
+    data = {
+        "content": f"{user_name} has entered the chat",
+        "user": {"username": user_name},
+        "room_name": room_name,
+        "type": "entrance",
+        "new_room_obj": room,
+    }
+    await manager.broadcast(f"{json.dumps(data, default=str)}")
     try:
+        # wait for messages
         while True:
             data = await websocket.receive_text()
             # await manager.send_personal_message(f"{data}", websocket)
             await upload_message_to_room(data)
             await manager.broadcast(f"{data}")
     except (WebSocketDisconnect, ConnectionClosedError):
+        # remove user
         logger.warning("Disconnecting Websocket")
         await manager.disconnect(websocket, room_name)
         await remove_user_from_room(None, room_name, username=user_name)
@@ -86,10 +99,10 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
             "content": f"{user_name} has left the chat",
             "user": {"username": user_name},
             "room_name": room_name,
-            "type": "dissmissal",
+            "type": "dismissal",
             "new_room_obj": room,
         }
-        await manager.broadcast(f"{data}")
+        await manager.broadcast(f"{json.dumps(data, default=str)}")
 
 
 app.include_router(api_router, prefix="/api")

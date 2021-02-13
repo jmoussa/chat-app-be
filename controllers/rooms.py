@@ -5,6 +5,7 @@ from models import RoomInDB, User
 import logging
 import json
 from bson import ObjectId
+from utils import format_ids
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ async def upload_message_to_room(data):
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
     try:
+        logger.info(f"RAW MESSAGE {message_data}")
         room = await get_room(message_data["room_name"])
         user = await get_user(message_data["user"]["username"])
         message_data["user"] = user
@@ -56,7 +58,7 @@ async def get_room(room_name) -> RoomInDB:
     db = db_client.rooms
     row = db.find_one({"room_name": room_name})
     if row is not None:
-        row["_id"] = str(row["_id"])
+        row = format_ids(row)
         return row
     else:
         return None
@@ -70,7 +72,8 @@ async def add_user_to_room(username: str, room_name: str):
         user = await get_user(username)
 
         collection = db.rooms
-        if user not in room["members"]:
+        username_list = [m["username"] for m in room["members"]]
+        if user["username"] not in username_list:
             logger.info(f"Adding {user['username']} to members")
             collection.update_one({"_id": ObjectId(room["_id"])}, {"$push": {"members": user}})
             return True
@@ -91,7 +94,8 @@ async def remove_user_from_room(user: User, room_name: str, username=None):
             user = await get_user(username)
 
         collection = db.rooms
-        if user in room["members"]:
+        username_list = [m["username"] for m in room["members"]]
+        if user["username"] in username_list:
             logger.info(f"Removing {user['username']} from {room_name} members")
             collection.update_one(
                 {"_id": ObjectId(room["_id"])}, {"$pull": {"members": {"username": user["username"]}}}

@@ -1,6 +1,3 @@
-### Please note: this default `develop` branch does not house the full app, but the BE to another front-end. 
-#### Use `master` branch for the full app where the POC will work.
-
 # Chat Room App
 
 This API was built to support the [chat_app_FE](https://github.com/jmoussa/chat_app_FE).

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class RegisterRequest(BaseModel):
@@ -14,3 +15,10 @@ class LoginRequest(BaseModel):
 class RoomCreateRequest(BaseModel):
     username: str
     room_name: str
+
+
+class FavoriteRequest(BaseModel):
+    username: str
+    favorite: Optional[str]
+    favorites: Optional[list]
+    type: str

@@ -9,6 +9,7 @@ class User(BaseModel):
     username: str
     hashed_password: str
     salt: str
+    favorites: Optional[List[str]]
     disabled: bool = False
 
 

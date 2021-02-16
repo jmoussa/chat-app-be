@@ -6,6 +6,7 @@ from mongodb import get_nosql_db, MongoClient
 from config import MONGODB_DB_NAME
 from models import User
 from utils import format_ids
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 

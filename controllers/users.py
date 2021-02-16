@@ -98,3 +98,23 @@ async def get_user(name) -> UserInDB:
         return row
     else:
         return None
+
+
+async def add_favlist_to_user(username, favorite_list):
+    client = await get_nosql_db()
+    db = client[MONGODB_DB_NAME]
+    users_collection = db.users
+    user_obj = await get_user(username)
+    users_collection.update_one({"username": user_obj["username"]}, {"$push": {"favorites": favorite_list}})
+    user = await get_user(username)
+    return user
+
+
+async def remove_favorite_to_user(username, favorite):
+    client = await get_nosql_db()
+    db = client[MONGODB_DB_NAME]
+    users_collection = db.users
+    user_obj = await get_user(username)
+    users_collection.update_one({"username": user_obj["username"]}, {"$pull": {"favorites": favorite}})
+    user = await get_user(username)
+    return user

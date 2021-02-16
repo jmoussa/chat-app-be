@@ -16,4 +16,3 @@ def format_ids(nested_dictionary):
             if key == "_id":
                 nested_dictionary[key] = str(value)
     return nested_dictionary
-

@@ -45,9 +45,7 @@ async def get_all_rooms(
     Fetch all available rooms
     """
     rooms = await get_rooms()
-    # ObjectId shenanagains
-    formatted_rooms = [format_ids(room) for room in rooms]
-    return formatted_rooms
+    return rooms 
 
 
 @router.get("/room/{room_name}", tags=["Rooms"])

@@ -1,11 +1,11 @@
 from config import MONGODB_DB_NAME
 from controllers.users import get_user
+from utils import format_ids
 from mongodb import get_nosql_db
 from models import RoomInDB, User
 import logging
 import json
 from bson import ObjectId
-from utils import format_ids
 
 logger = logging.getLogger(__name__)
 
@@ -40,15 +40,19 @@ async def insert_room(username, room_name, collection):
     return res
 
 
-async def get_rooms():
+async def get_rooms(filter_list: list = None):
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
     collection = db.rooms
-    rows = collection.find()
+    if filter_list is None:
+        rows = collection.find()
+    else:
+        rows = collection.find({"room_name": {"$all": filter_list}})
+
     row_list = []
     for row in rows:
-        row["_id"] = str(row["_id"])
-        row_list.append(row)
+        f_row = format_ids(row)
+        row_list.append(f_row)
     return row_list
 
 

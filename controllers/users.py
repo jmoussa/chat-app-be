@@ -9,6 +9,7 @@ from config import MONGODB_DB_NAME
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import logging
+from controllers.rooms import get_rooms
 
 logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], default="bcrypt")
@@ -118,3 +119,10 @@ async def remove_favorite_to_user(username, favorite):
     users_collection.update_one({"username": user_obj["username"]}, {"$pull": {"favorites": favorite}})
     user = await get_user(username)
     return user
+
+
+async def get_user_favorites(user_name):
+    user = await get_user(user_name)
+    favs = user["favorites"]
+    favorite_rooms = await get_rooms(favs)
+    return favorite_rooms

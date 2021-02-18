@@ -40,15 +40,15 @@ async def alter_favorite_room(
         pass
 
 
-@router.get("/favorites/{user_name}", tags=["User"])
+@router.get("/favorites", tags=["User"])
 async def get_favorite_rooms(
-    user_name: str, current_user: User = Depends(get_current_active_user), client: MongoClient = Depends(get_nosql_db),
+    current_user: User = Depends(get_current_active_user), client: MongoClient = Depends(get_nosql_db),
 ):
     """
     Get all favorite Room objects from a user
     """
     try:
-        rooms_list = await get_user_favorites(user_name)
+        rooms_list = await get_user_favorites(current_user.username)
         return rooms_list
     except Exception as e:
         logger.error(f"/favorites: {e}")

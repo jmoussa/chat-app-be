@@ -8,8 +8,8 @@ from models import TokenData, User, UserInDB
 from config import MONGODB_DB_NAME
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from utils import format_ids
 import logging
-from controllers.rooms import get_rooms
 
 logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], default="bcrypt")
@@ -96,6 +96,7 @@ async def get_user(name) -> UserInDB:
     users_collection = db.users
     row = users_collection.find_one({"username": name})
     if row is not None:
+        row = format_ids(row)
         return row
     else:
         return None
@@ -106,12 +107,23 @@ async def add_favlist_to_user(username, favorite_list):
     db = client[MONGODB_DB_NAME]
     users_collection = db.users
     user_obj = await get_user(username)
-    users_collection.update_one({"username": user_obj["username"]}, {"$push": {"favorites": favorite_list}})
-    user = await get_user(username)
-    return user
+    if "favorites" in user_obj:
+        missing_favorites = [item for item in favorite_list if item not in user_obj["favorites"]]
+    else:
+        missing_favorites = favorite_list
+
+    if len(missing_favorites) > 0:
+        for fav in missing_favorites:
+            users_collection.update_one(
+                {"username": user_obj["username"]}, {"$push": {"favorites": {"$each": missing_favorites}}}
+            )
+        user = await get_user(username)
+        return user
+    else:
+        return user_obj
 
 
-async def remove_favorite_to_user(username, favorite):
+async def remove_favorite_from_user(username, favorite):
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
     users_collection = db.users
@@ -119,10 +131,3 @@ async def remove_favorite_to_user(username, favorite):
     users_collection.update_one({"username": user_obj["username"]}, {"$pull": {"favorites": favorite}})
     user = await get_user(username)
     return user
-
-
-async def get_user_favorites(user_name):
-    user = await get_user(user_name)
-    favs = user["favorites"]
-    favorite_rooms = await get_rooms(favs)
-    return favorite_rooms

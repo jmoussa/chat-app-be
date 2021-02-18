@@ -4,12 +4,11 @@ from datetime import datetime
 from bson import ObjectId
 
 
-# nosql/mongodb
 class User(BaseModel):
     username: str
     hashed_password: str
     salt: str
-    favorites: Optional[List[str]]
+    favorites: List[str] = []
     disabled: bool = False
 
 

@@ -129,3 +129,10 @@ async def set_room_activity(room_name, activity_bool):
         return new_doc
     else:
         return None
+
+
+async def get_user_favorites(user_name):
+    user = await get_user(user_name)
+    favs = user["favorites"]
+    favorite_rooms = await get_rooms(favs)
+    return favorite_rooms

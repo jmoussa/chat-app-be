@@ -6,7 +6,7 @@ from requests import FavoriteRequest
 
 from controllers import (
     add_favlist_to_user,
-    remove_favlist_to_user,
+    remove_favorite_from_user,
     get_current_active_user,
     get_user_favorites,
 )
@@ -18,20 +18,22 @@ router = APIRouter()
 
 
 @router.post("/favorites", tags=["User"])
-async def add_favorite_room(
+async def alter_favorite_room(
     request: FavoriteRequest,
     current_user: User = Depends(get_current_active_user),
     client: MongoClient = Depends(get_nosql_db),
 ):
     """
     Add or remove a favorite room from a user
+    the request.type should be either "add" or "remove"
     """
     try:
         if request.type == "add":
             new_user_obj = await add_favlist_to_user(request.username, request.favorites)
         elif request.type == "remove":
-            new_user_obj = await remove_favlist_to_user(request.username, request.favorite)
+            new_user_obj = await remove_favorite_from_user(request.username, request.favorite)
 
+        logger.info(f"Updated User Favorites\n{new_user_obj['favorites']}\n-----------------------")
         return new_user_obj
     except Exception as e:
         logger.error(f"/favorites: {e}")

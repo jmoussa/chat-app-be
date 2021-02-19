@@ -44,15 +44,17 @@ async def get_rooms(filter_list: list = None):
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
     collection = db.rooms
+    logger.info(f"Filter list: {filter_list}")
     if filter_list is None:
         rows = collection.find()
     else:
-        rows = collection.find({"room_name": {"$all": filter_list}})
+        rows = collection.find({"room_name": {"$in": filter_list}})
 
     row_list = []
     for row in rows:
         f_row = format_ids(row)
         row_list.append(f_row)
+    logger.info(f"Favs: {row_list}")
     return row_list
 
 

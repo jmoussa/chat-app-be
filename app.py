@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket
-from websockets.exceptions import ConnectionClosedError
+
+# from websockets.exceptions import ConnectionClosedError
 from starlette.websockets import WebSocketDisconnect
 from controllers import get_room, remove_user_from_room, add_user_to_room, upload_message_to_room
 from mongodb import close_mongo_connection, connect_to_mongo, get_nosql_db
@@ -7,6 +8,8 @@ from starlette.middleware.cors import CORSMiddleware
 from config import MONGODB_DB_NAME
 from api import router as api_router
 from notifier import ConnectionManager
+from starlette.websockets import WebSocketState
+
 import pymongo
 import logging
 import json
@@ -71,26 +74,31 @@ manager = ConnectionManager()
 
 @app.websocket("/ws/{room_name}/{user_name}")
 async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
-    # add user
-    await manager.connect(websocket, room_name)
-    await add_user_to_room(user_name, room_name)
-    room = await get_room(room_name)
-    data = {
-        "content": f"{user_name} has entered the chat",
-        "user": {"username": user_name},
-        "room_name": room_name,
-        "type": "entrance",
-        "new_room_obj": room,
-    }
-    await manager.broadcast(f"{json.dumps(data, default=str)}")
     try:
+        # add user
+        await manager.connect(websocket, room_name)
+        await add_user_to_room(user_name, room_name)
+        room = await get_room(room_name)
+        data = {
+            "content": f"{user_name} has entered the chat",
+            "user": {"username": user_name},
+            "room_name": room_name,
+            "type": "entrance",
+            "new_room_obj": room,
+        }
+        await manager.broadcast(f"{json.dumps(data, default=str)}")
         # wait for messages
         while True:
-            data = await websocket.receive_text()
-            # await manager.send_personal_message(f"{data}", websocket)
-            await upload_message_to_room(data)
-            await manager.broadcast(f"{data}")
-    except (WebSocketDisconnect, ConnectionClosedError):
+            if websocket.application_state == WebSocketState.CONNECTED:
+                data = await websocket.receive_text()
+                # await manager.send_personal_message(f"{data}", websocket)
+                await upload_message_to_room(data)
+                await manager.broadcast(f"{data}")
+            else:
+                logger.warning(f"Websocket state: {websocket.application_state}, reconnecting...")
+                await manager.connect(websocket, room_name)
+
+    except WebSocketDisconnect:
         # remove user
         logger.warning("Disconnecting Websocket")
         await remove_user_from_room(None, room_name, username=user_name)
@@ -104,6 +112,11 @@ async def websocket_endpoint(websocket: WebSocket, room_name, user_name):
         }
         await manager.broadcast(f"{json.dumps(data, default=str)}")
         await manager.disconnect(websocket, room_name)
+    except Exception as ex:
+        await manager.disconnect(websocket, room_name)
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        logger.error(message)
 
 
 app.include_router(api_router, prefix="/api")

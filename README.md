@@ -15,16 +15,15 @@ This app uses:
 
 I've set it up so that you only need to use the `run` script
 
-```
-> conda env create -f environment.yml
-> conda activate
-> ./run
+```bash
+conda env create -f environment.yml
+conda activate chat_app
+./run
 ```
 
 _For quick API documentation, navigate to `localhost:8000/docs` after starting the server_
 
 ## Screenshots
-
 ![Login](./screenshots/1.jpg)
 ![Lobby](./screenshots/2.jpg)
 ![Favorites](./screenshots/3.jpg)

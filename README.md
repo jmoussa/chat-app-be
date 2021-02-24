@@ -8,7 +8,7 @@ This app uses:
 
 - Anaconda (for Python environemnt management)
 - Python FastAPI+WebSockets [docs](https://fastapi.tiangolo.com/)
-- Pymongo[docs](https://pymongo.readthedocs.io/en/stable/)
+- Pymongo [docs](https://pymongo.readthedocs.io/en/stable/)
 - MongoDB [docs](https://docs.mongodb.com/manual/)
 
 ## Setting up and running

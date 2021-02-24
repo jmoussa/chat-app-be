@@ -15,7 +15,6 @@ async def upload_message_to_room(data):
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
     try:
-        logger.info(f"RAW MESSAGE {message_data}")
         room = await get_room(message_data["room_name"])
         user = await get_user(message_data["user"]["username"])
         message_data["user"] = user
@@ -44,7 +43,6 @@ async def get_rooms(filter_list: list = None):
     client = await get_nosql_db()
     db = client[MONGODB_DB_NAME]
     collection = db.rooms
-    logger.info(f"Filter list: {filter_list}")
     if filter_list is None:
         rows = collection.find()
     else:
@@ -54,7 +52,6 @@ async def get_rooms(filter_list: list = None):
     for row in rows:
         f_row = format_ids(row)
         row_list.append(f_row)
-    logger.info(f"Favs: {row_list}")
     return row_list
 
 

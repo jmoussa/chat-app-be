@@ -10,7 +10,10 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from utils import format_ids
 import logging
+import boto3
+from config import AWS_BUCKET, AWS_BASE
 
+client = boto3.client("s3")
 logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], default="bcrypt")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -133,6 +136,13 @@ async def remove_favorite_from_user(username, favorite):
     return user
 
 
-async def update_profile_picture(user, form_data):
+async def update_profile_picture(user, file, filename):
+    logger.info(f"FILENAME: {AWS_BASE + filename}")
+    try:
+        client.upload_fileobj(file, AWS_BUCKET, AWS_BASE + filename)
+    except Exception as e:
+        logger.error("Error uploading to S3")
+        logger.error(f"Error: {e}")
+
     new_user = await get_user(user.username)
     return new_user

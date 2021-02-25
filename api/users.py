@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import Depends, APIRouter, Form
+from fastapi import Depends, APIRouter, File, UploadFile
 
 from requests import FavoriteRequest
 
@@ -55,9 +55,9 @@ async def get_favorite_rooms(
         logger.error(f"/favorites: {e}")
 
 
-@router.post("/user/profile_picture")
+@router.post("/user/profile_picture", tags=["User"])
 async def upload_profile_picture(
-    request: str = Form(...),
+    file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_user),
     client: MongoClient = Depends(get_nosql_db),
 ):
@@ -65,8 +65,7 @@ async def upload_profile_picture(
     Upload a profile picture for the current user
     """
     try:
-        logger.info(f"----------Form Data-----------\n{request}")
-        new_user = await update_profile_picture(current_user, request)
+        new_user = await update_profile_picture(current_user, file.file, file.filename)
         return new_user
     except Exception as e:
         logger.error(f"/user/profile_picture: {e}")

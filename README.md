@@ -10,14 +10,19 @@ This app uses:
 - Python FastAPI+WebSockets [docs](https://fastapi.tiangolo.com/)
 - Pymongo [docs](https://pymongo.readthedocs.io/en/stable/)
 - MongoDB [docs](https://docs.mongodb.com/manual/)
+- AWS S3
+
 
 ## Setting up and running
 
-I've set it up so that you only need to use the `run` script
+I've set it up so that you only need to use the `run` script to start.
+Be sure to set the S3 environement variables for access
 
 ```bash
 conda env create -f environment.yml
 conda activate chat_app
+export AWS_SECRET_ACCESS_KEY=...
+export AWS_ACCESS_KEY_ID=...
 ./run
 ```
 

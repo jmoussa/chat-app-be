@@ -131,3 +131,8 @@ async def remove_favorite_from_user(username, favorite):
     users_collection.update_one({"username": user_obj["username"]}, {"$pull": {"favorites": favorite}})
     user = await get_user(username)
     return user
+
+
+async def update_profile_picture(user, form_data):
+    new_user = await get_user(user.username)
+    return new_user

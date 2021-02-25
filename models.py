@@ -8,6 +8,7 @@ class User(BaseModel):
     username: str
     hashed_password: str
     salt: str
+    profile_pic_img_src: Optional[str]
     favorites: List[str] = []
     disabled: bool = False
 

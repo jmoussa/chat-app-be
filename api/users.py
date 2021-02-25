@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, Form
 
 from requests import FavoriteRequest
 
@@ -9,6 +9,7 @@ from controllers import (
     remove_favorite_from_user,
     get_current_active_user,
     get_user_favorites,
+    update_profile_picture,
 )
 from models import User
 from mongodb import get_nosql_db, MongoClient
@@ -52,3 +53,20 @@ async def get_favorite_rooms(
         return rooms_list
     except Exception as e:
         logger.error(f"/favorites: {e}")
+
+
+@router.post("/user/profile_picture")
+async def upload_profile_picture(
+    request: str = Form(...),
+    current_user: User = Depends(get_current_active_user),
+    client: MongoClient = Depends(get_nosql_db),
+):
+    """
+    Upload a profile picture for the current user
+    """
+    try:
+        logger.info(f"----------Form Data-----------\n{request}")
+        new_user = await update_profile_picture(current_user, request)
+        return new_user
+    except Exception as e:
+        logger.error(f"/user/profile_picture: {e}")

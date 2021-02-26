@@ -1,5 +1,4 @@
 import logging
-
 from fastapi import Depends, APIRouter, File, UploadFile
 
 from requests import FavoriteRequest
@@ -68,4 +67,4 @@ async def upload_profile_picture(
         new_user = await update_profile_picture(current_user, file.file, file.filename)
         return new_user
     except Exception as e:
-        logger.error(f"/user/profile_picture: {e}")
+        logger.error(f"POST /user/profile_picture: {e}")

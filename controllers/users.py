@@ -135,9 +135,14 @@ async def remove_favorite_from_user(username, favorite):
 
 
 async def update_profile_picture(user, file, filename):
+    client = await get_nosql_db()
+    db = client[MONGODB_DB_NAME]
+    users_collection = db.users
     s3_result = upload_file_to_s3(file, filename)
     if s3_result:
         logger.info("S3 upload success")
+        s3_key = s3_result
+        users_collection.update_one({"username": user.username}, {"$set": {"profile_pic_img_src": s3_key}})
     else:
         logger.info("S3 upload failure")
     new_user = await get_user(user.username)

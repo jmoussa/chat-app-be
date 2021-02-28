@@ -42,7 +42,8 @@ async def alter_favorite_room(
 
 @router.get("/favorites", tags=["User"])
 async def get_favorite_rooms(
-    current_user: User = Depends(get_current_active_user), client: MongoClient = Depends(get_nosql_db),
+    current_user: User = Depends(get_current_active_user),
+    client: MongoClient = Depends(get_nosql_db),
 ):
     """
     Get all favorite Room objects from a user

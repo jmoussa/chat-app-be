@@ -14,9 +14,7 @@ router = APIRouter()
 
 @router.get("/twilio/token/{room_name}", tags=["Video Chat"])
 async def login_for_access_token(
-    room_name,
-    db: MongoClient = Depends(get_nosql_db),
-    current_user: User = Depends(get_current_active_user),
+    room_name, db: MongoClient = Depends(get_nosql_db), current_user: User = Depends(get_current_active_user),
 ):
     """
     Twilio Token Generator

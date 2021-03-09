@@ -23,6 +23,7 @@ conda env create -f environment.yml
 conda activate chat_app
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_ACCESS_KEY_ID=...
+cp config.template.py config.py # and enter your configuration parameters
 ./run
 ```
 

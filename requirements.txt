@@ -1,7 +1,7 @@
 alembic==1.4.2
 appdirs==1.4.3
 attrs==19.3.0
-black==19.10b0
+black==24.3.0
 boto3==1.17.15
 click==7.1.1
 fastapi==0.65.2
